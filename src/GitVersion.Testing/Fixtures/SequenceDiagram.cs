@@ -75,7 +75,7 @@ public class SequenceDiagram
 
         AppendLineFormat(
             color is null ? 1 : 2,
-            "Note over {0}{1}: {2}",
+            "note over {0}{1}: {2}",
             GetParticipant(startParticipant),
             endParticipant == null ? null : "," + GetParticipant(endParticipant),
             EscapeText(noteText));
