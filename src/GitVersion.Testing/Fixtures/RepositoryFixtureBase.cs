@@ -84,6 +84,13 @@ public abstract class RepositoryFixtureBase : IDisposable
         return sha;
     }
 
+    public string MakeATaggedCommit(string tag, string message)
+    {
+        var sha = MakeACommit(message);
+        ApplyTag(tag);
+        return sha;
+    }
+
     public void ApplyTag(string tag)
     {
         SequenceDiagram.ApplyTag(tag, Repository.Head.FriendlyName);
@@ -118,9 +125,9 @@ public abstract class RepositoryFixtureBase : IDisposable
         return commit.Sha;
     }
 
-    public void MakeACommit(string commitMsg)
+    public string MakeACommit(string commitMsg)
     {
-        Repository.MakeACommit(commitMsg);
+        var commit = Repository.MakeACommit(commitMsg);
 
         var participant = SequenceDiagram.GetParticipant(Repository.Head.FriendlyName);
         if (commitMsg.Length < 40)
@@ -132,6 +139,8 @@ public abstract class RepositoryFixtureBase : IDisposable
             var formattedCommitMsg = string.Join(SysEnv.NewLine, $"Commit '{commitMsg}'".SplitIntoLines(60));
             SequenceDiagram.NoteOver(formattedCommitMsg, participant);
         }
+
+        return commit.Sha;
     }
 
     /// <summary>
@@ -143,11 +152,31 @@ public abstract class RepositoryFixtureBase : IDisposable
         Repository.MergeNoFF(mergeSource, Generate.SignatureNow());
     }
 
+    /// <summary>
+    ///     Merges (no-ff) specified branch into the current HEAD of this repository
+    /// </summary>
+    public void MergeNoFF(string mergeSource, string message)
+    {
+        SequenceDiagram.Merge(mergeSource, Repository.Head.FriendlyName);
+        Repository.MergeNoFF(mergeSource, message);
+    }
+
     public void MergeTo(string branchName, bool removeBranchAfterMerging = false)
     {
         var mergeSource = Repository.Head.FriendlyName;
         Checkout(branchName);
         MergeNoFF(mergeSource);
+        if (removeBranchAfterMerging)
+        {
+            Remove(mergeSource);
+        }
+    }
+
+    public void MergeTo(string branchName, string message, bool removeBranchAfterMerging = false)
+    {
+        var mergeSource = Repository.Head.FriendlyName;
+        Checkout(branchName);
+        MergeNoFF(mergeSource, message);
         if (removeBranchAfterMerging)
         {
             Remove(mergeSource);
